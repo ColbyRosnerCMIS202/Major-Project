@@ -14,6 +14,12 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.*;
 
 
 public class ScheduleBuilderUI extends Application {
@@ -92,6 +98,7 @@ public class ScheduleBuilderUI extends Application {
         primaryStage.setTitle("Schedule Builder");
         primaryStage.show();
     }
+
     private String getDaysString(boolean[] availability) {
         StringBuilder days = new StringBuilder();
         String[] dayNames = {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"};
@@ -105,13 +112,30 @@ public class ScheduleBuilderUI extends Application {
         }
         return days.toString();
     }
+
     private void addWorker() {
+
         String name = nameField.getText();
         String occupation = occupationChoiceBox.getValue();
         boolean[] availability = new boolean[7];
         for (int i = 0; i < 7; i++) {
             availability[i] = dayCheckboxes[i].isSelected();
         }
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/workerlog", "root",
+                    "password");
+            Statement statement = connection.createStatement();
+            ResultSet resultset = statement.executeQuery("SELECT FROM * USERS");
+            while (resultset.next()) {
+                System.out.println(resultset.getString("username"));
+                System.out.println(resultset.getString("password"));
+
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
 
         Worker worker = new Worker(name, occupation, availability);
         // Create a new Worker object
@@ -182,7 +206,11 @@ public class ScheduleBuilderUI extends Application {
     }
 
     public static void main(String[] args) {
+
         launch(args);
+
+
+
     }
 
 }
