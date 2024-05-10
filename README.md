@@ -1,3 +1,6 @@
+The code implements a Schedule Builder application that allows users to add workers with their names, occupations (either Cashier or Driver), and availability for each day of the week.The front end is a JavaFX GUI with text fields for name, a choice box for occupation, and checkboxes for each day's availability. Users can add workers to the schedule, and their information is displayed in a list. The application also allows users to build a schedule based on the added workers, which is displayed in the list view. Behind the scenes, the application uses an ArrayList to store the workers and a custom LinkedList implementation to manage the worker list. It also includes methods to sort the workers based on their occupation and write the sorted list to a file. Additionally, it uses JDBC to connect to a MySQL database and retrieve user information
+
+
 The users of the software would be me because I am a manager. The software would automate a schedule builder function that are manually inputted by me and my boss.. This software would be used daily and weekly at my place of work
 
 ![Schedule Builder UI](https://github.com/ColbyRosnerCMIS202/Major-Project/assets/161066806/678796c7-fd07-416c-b44b-d0f6a53203f6)
