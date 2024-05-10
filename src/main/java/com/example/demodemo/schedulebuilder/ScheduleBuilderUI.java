@@ -1,0 +1,188 @@
+package com.example.demodemo.schedulebuilder;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
+
+public class ScheduleBuilderUI extends Application {
+    private List<Worker> workers;
+    private LinkedList<Worker> workersList;
+    private ListView<String> scheduleListView;
+    private CheckBox[] dayCheckboxes;
+    private ChoiceBox<String> occupationChoiceBox;
+    private TextField nameField;
+    private MyHashTable workerTable;
+
+
+
+    public void start(Stage primaryStage) {
+        workers = new ArrayList<>();
+        workersList = new LinkedList<>(); // Initialize workersList in the start method
+
+
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(10));
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        Label nameLabel = new Label("Name:");
+        nameField = new TextField(); // Initialize here
+        grid.add(nameLabel, 0, 0);
+        grid.add(nameField, 1, 0);
+
+        Label occupationLabel = new Label("Occupation:");
+        occupationChoiceBox = new ChoiceBox<>();
+        occupationChoiceBox.getItems().addAll("Cashier", "Driver");
+        grid.add(occupationLabel, 0, 1);
+        grid.add(occupationChoiceBox, 1, 1);
+
+        Label availabilityLabel = new Label("Availability:");
+        grid.add(availabilityLabel, 0, 2);
+
+        String[] dayNames = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        dayCheckboxes = new CheckBox[7];
+        for (int i = 0; i < 7; i++) {
+            dayCheckboxes[i] = new CheckBox(dayNames[i]);
+            grid.add(dayCheckboxes[i], 0, i + 3);
+        }
+
+        HBox buttonBox = new HBox(10);
+        // Add Worker button
+        Button addButton = new Button("Add Worker");
+        addButton.setOnAction(e -> {
+            addWorker();
+        });
+        buttonBox.getChildren().addAll(addButton);
+
+        // Build Schedule button
+        Button buildButton = new Button("Build Schedule");
+        buildButton.setOnAction(e -> {
+            updateScheduleList();
+        });
+        buttonBox.getChildren().addAll(buildButton);
+
+        // Sort and Write button
+        Button sortAndWriteButton = new Button("Sort and Write");
+        sortAndWriteButton.setOnAction(e -> {
+            sortAndWriteWorkers();
+        });
+        buttonBox.getChildren().addAll(sortAndWriteButton);
+
+        grid.add(buttonBox, 0, 11, 2, 1);
+
+        scheduleListView = new ListView<>();
+        VBox.setVgrow(scheduleListView, javafx.scene.layout.Priority.ALWAYS);
+        VBox vbox = new VBox(scheduleListView);
+        grid.add(vbox, 0, 12, 2, 1);
+
+        Scene scene = new Scene(grid, 400, 500);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Schedule Builder");
+        primaryStage.show();
+    }
+    private String getDaysString(boolean[] availability) {
+        StringBuilder days = new StringBuilder();
+        String[] dayNames = {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"};
+        for (int i = 0; i < availability.length; i++) {
+            if (availability[i]) {
+                days.append(dayNames[i]).append(",");
+            }
+        }
+        if (days.length() > 0) {
+            days.setLength(days.length() - 1); // Remove the trailing comma
+        }
+        return days.toString();
+    }
+    private void addWorker() {
+        String name = nameField.getText();
+        String occupation = occupationChoiceBox.getValue();
+        boolean[] availability = new boolean[7];
+        for (int i = 0; i < 7; i++) {
+            availability[i] = dayCheckboxes[i].isSelected();
+        }
+
+        Worker worker = new Worker(name, occupation, availability);
+        // Create a new Worker object
+
+        // Add the worker to the workersList
+        workersList.add(worker);
+
+        workers.add(worker);
+
+        try (FileWriter writer = new FileWriter("workers.txt", true)) {
+            String days = getDaysString(worker.getAvailability());
+            writer.write(worker.getName() + " - " + worker.getOccupation() + " (" + days + ")\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        nameField.clear();
+        occupationChoiceBox.getSelectionModel().clearSelection();
+        for (CheckBox checkbox : dayCheckboxes) {
+            checkbox.setSelected(false);
+        }
+    }
+
+
+
+    private void updateScheduleList() {
+        ScheduleBuilder scheduleBuilder = new ScheduleBuilder();
+        for (Worker worker : workers) {
+            scheduleBuilder.addWorker(worker);
+        }
+        List<String> schedules = scheduleBuilder.buildSchedule(); // Get the schedules
+        scheduleListView.getItems().setAll(schedules); // Display the schedules in the list view
+    }
+
+    private void sortAndWriteWorkers() {
+        // Using a Deque to store workers
+        Deque<Worker> workerDeque = new ArrayDeque<>();
+
+        // Add all workers to the Deque
+        for (Worker worker : workers) {
+            workerDeque.offer(worker);
+            }
+
+            List<Worker> sortedWorkers = new ArrayList<>();
+
+            // Separate cashiers and drivers
+            for (Worker worker : workerDeque) {
+                if (worker.getOccupation().equals("Cashier")) {
+                    sortedWorkers.add(worker);
+                }
+            }
+
+            for (Worker worker : workerDeque) {
+                if (worker.getOccupation().equals("Driver")) {
+                    sortedWorkers.add(worker);
+                }
+            }
+
+        // Write the sorted workers to a file
+        try (FileWriter writer = new FileWriter("sorted_workers.txt", true)) {
+            for (Worker worker : sortedWorkers) {
+                String days = getDaysString(worker.getAvailability());
+                writer.write(worker.getName() + " - " + worker.getOccupation() + " (" + days + ")\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}
